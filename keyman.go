@@ -1,45 +1,25 @@
 package filenc
 
 import (
-	"crypto/rand"
 	"fmt"
-	"os"
 
 	"github.com/google/tink/go/aead"
 	"github.com/google/tink/go/aead/subtle"
 	"github.com/google/tink/go/keyset"
-	subtleMac "github.com/google/tink/go/mac/subtle"
 	"github.com/google/tink/go/tink"
+	"github.com/spf13/afero"
 	"golang.org/x/crypto/scrypt"
 )
+
+var appFs = afero.NewOsFs()
 
 func deriveScryptKey(passphrase []byte, salt []byte) ([]byte, error) {
 	return scrypt.Key(passphrase, salt, scryptN, scryptR, scryptP, scryptKeyLen)
 }
 
-// Pulled from Tink tests to generate initial AEAD without KMS
-func createAEAD(key []byte) (tink.AEAD, error) {
-	ctr, err := subtle.NewAESCTR(key, aeadIVSize)
-	if err != nil {
-		return nil, err
-	}
-
-	macKey := make([]byte, aeadMacSize)
-	_, err = rand.Read(macKey)
-	if err != nil {
-		return nil, err
-	}
-
-	mac, err := subtleMac.NewHMAC(aeadHashFunc, macKey, uint32(aeadTagSize))
-	if err != nil {
-		return nil, err
-	}
-
-	cipher, err := subtle.NewEncryptThenAuthenticate(ctr, mac, aeadTagSize)
-	if err != nil {
-		return nil, err
-	}
-	return cipher, nil
+// createAESGCMAEAD takes a raw key in and creates an AESGCM AEAD from it
+func createAESGCMAEAD(key []byte) (tink.AEAD, error) {
+	return subtle.NewAESGCM(key)
 }
 
 func getMasterKey(passphrase []byte, keyConfig *Config) (tink.AEAD, error) {
@@ -48,11 +28,11 @@ func getMasterKey(passphrase []byte, keyConfig *Config) (tink.AEAD, error) {
 		return nil, err
 	}
 
-	return createAEAD(sKey)
+	return createAESGCMAEAD(sKey)
 }
 
 func loadKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) {
-	info, err := os.Stat(keyConfig.KeysetPath)
+	info, err := appFs.Stat(keyConfig.KeysetPath)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +41,7 @@ func loadKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) 
 		return nil, fmt.Errorf("keyfile path is a directory")
 	}
 
-	fileReader, err := os.Open(keyConfig.KeysetPath)
+	fileReader, err := appFs.Open(keyConfig.KeysetPath)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +54,7 @@ func loadKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) 
 }
 
 func newKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) {
-	_, err := os.Stat(keyConfig.KeysetPath)
+	_, err := appFs.Stat(keyConfig.KeysetPath)
 	if err == nil {
 		return nil, fmt.Errorf("keypath %s already exists", keyConfig.KeysetPath)
 	}
@@ -85,7 +65,7 @@ func newKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) {
 	}
 
 	fmt.Printf("Writing keyset to disk: %s\n", keyConfig.KeysetPath)
-	keyFile, err := os.Create(keyConfig.KeysetPath)
+	keyFile, err := appFs.Create(keyConfig.KeysetPath)
 	if err != nil {
 		return nil, err
 	}
