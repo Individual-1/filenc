@@ -1,10 +1,11 @@
 package filenc
 
 import (
-	"bufio"
 	"fmt"
-	"io/ioutil"
-	"os"
+	"io"
+	"syscall"
+
+	"golang.org/x/term"
 
 	"github.com/google/tink/go/aead"
 	"github.com/google/tink/go/keyset"
@@ -37,7 +38,7 @@ func NewClient(configPath string) (*Client, error) {
 
 	defer f.Close()
 
-	data, err := ioutil.ReadAll(f)
+	data, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -73,10 +74,9 @@ func (c *Client) Decrypt(data []byte, assocData []byte) ([]byte, error) {
 }
 
 func retrieveMasterKey(reason string, keyConfig *Config) (tink.AEAD, error) {
-	reader := bufio.NewReader(os.Stdin)
 	fmt.Println(reason)
 	fmt.Print("> ")
-	passphrase, err := reader.ReadBytes('\n')
+	passphrase, err := term.ReadPassword(syscall.Stdin)
 	if err != nil {
 		return nil, err
 	}
