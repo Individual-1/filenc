@@ -7,11 +7,8 @@ import (
 	"github.com/google/tink/go/aead/subtle"
 	"github.com/google/tink/go/keyset"
 	"github.com/google/tink/go/tink"
-	"github.com/spf13/afero"
 	"golang.org/x/crypto/scrypt"
 )
-
-var appFs = afero.NewOsFs()
 
 func deriveScryptKey(passphrase []byte, salt []byte) ([]byte, error) {
 	return scrypt.Key(passphrase, salt, scryptN, scryptR, scryptP, scryptKeyLen)

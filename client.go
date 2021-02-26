@@ -21,7 +21,7 @@ type Client struct {
 func NewClient(configPath string) (*Client, error) {
 	c := Client{}
 
-	info, err := os.Stat(configPath)
+	info, err := appFs.Stat(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func NewClient(configPath string) (*Client, error) {
 		return nil, fmt.Errorf("config path points to directory")
 	}
 
-	f, err := os.Open(configPath)
+	f, err := appFs.Open(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func getKeyset(keyConfig *Config) (*keyset.Handle, error) {
 	var kh *keyset.Handle
 	var mKey tink.AEAD
 
-	_, err := os.Stat(keyConfig.KeysetPath)
+	_, err := appFs.Stat(keyConfig.KeysetPath)
 	if err != nil {
 		// File does exist
 		mKey, err = retrieveMasterKey("Enter passphrase", keyConfig)
@@ -116,5 +116,4 @@ func getKeyset(keyConfig *Config) (*keyset.Handle, error) {
 	}
 
 	return kh, nil
-
 }
