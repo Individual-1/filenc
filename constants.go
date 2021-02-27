@@ -2,8 +2,8 @@ package filenc
 
 import "github.com/spf13/afero"
 
-// AppFS controls what filesystem we are using
-var AppFS = afero.NewOsFs()
+// AppFs controls what filesystem we are using
+var AppFs = afero.NewOsFs()
 
 const (
 	scryptN      int = 32768
