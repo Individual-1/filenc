@@ -99,8 +99,8 @@ func TestRawAESGCMKeyCreation(t *testing.T) {
 }
 
 func TestKeysetNew(t *testing.T) {
-	appFs = afero.NewMemMapFs()
-	appFs.MkdirAll("/tmp", 0755)
+	AppFS = afero.NewMemMapFs()
+	AppFS.MkdirAll("/tmp", 0755)
 
 	c := Config{
 		KeysetPath: "/tmp/test",
@@ -151,9 +151,9 @@ func TestKeysetNew(t *testing.T) {
 }
 
 func TestKeysetErrorExists(t *testing.T) {
-	appFs = afero.NewMemMapFs()
-	appFs.MkdirAll("/tmp", 0755)
-	afero.WriteFile(appFs, "/tmp/test", []byte("file"), 0644)
+	AppFS = afero.NewMemMapFs()
+	AppFS.MkdirAll("/tmp", 0755)
+	afero.WriteFile(AppFS, "/tmp/test", []byte("file"), 0644)
 
 	c := Config{
 		KeysetPath: "/tmp/test",
@@ -167,8 +167,8 @@ func TestKeysetErrorExists(t *testing.T) {
 }
 
 func TestErrorLoadKeyset(t *testing.T) {
-	appFs = afero.NewMemMapFs()
-	appFs.MkdirAll("/tmp", 0755)
+	AppFS = afero.NewMemMapFs()
+	AppFS.MkdirAll("/tmp", 0755)
 
 	c := Config{
 		KeysetPath: "/tmp/test",
@@ -180,7 +180,7 @@ func TestErrorLoadKeyset(t *testing.T) {
 		t.Error("Expected keypath doesn't exists error")
 	}
 
-	appFs.MkdirAll("/tmp/test", 0755)
+	AppFS.MkdirAll("/tmp/test", 0755)
 
 	_, err = loadKeyset(nil, &c)
 	if err == nil {

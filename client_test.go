@@ -12,7 +12,7 @@ import (
 )
 
 func TestClientError(t *testing.T) {
-	appFs = afero.NewMemMapFs()
+	AppFS = afero.NewMemMapFs()
 
 	// Test config path doesnt exist
 	_, err := NewClient("/tmp/config")
@@ -21,7 +21,7 @@ func TestClientError(t *testing.T) {
 	}
 
 	// Test config path is directory
-	appFs.MkdirAll("/tmp/config/", 0755)
+	AppFS.MkdirAll("/tmp/config/", 0755)
 
 	_, err = NewClient("/tmp/config")
 	if err == nil {
@@ -31,7 +31,7 @@ func TestClientError(t *testing.T) {
 	// Test config doesn't match expected format
 	js := []byte(`{"keysetPath": 1234, "salt": 4321`)
 
-	err = afero.WriteFile(appFs, "/tmp/config/malformed", js, 0644)
+	err = afero.WriteFile(AppFS, "/tmp/config/malformed", js, 0644)
 
 	_, err = NewClient("/tmp/config/malformed")
 	if err == nil {
@@ -46,8 +46,8 @@ func TestClientCrypto(t *testing.T) {
 
 	mockPasswordReader := mocks.NewMockPasswordReader(mockControl)
 
-	appFs = afero.NewMemMapFs()
-	appFs.MkdirAll("/tmp/", 0755)
+	AppFS = afero.NewMemMapFs()
+	AppFS.MkdirAll("/tmp/", 0755)
 
 	c := Config{
 		KeysetPath: "/tmp/test",
@@ -59,7 +59,7 @@ func TestClientCrypto(t *testing.T) {
 		t.Errorf("Failed to marshal json config: %s", err.Error())
 	}
 
-	err = afero.WriteFile(appFs, "/tmp/config", f, 0644)
+	err = afero.WriteFile(AppFS, "/tmp/config", f, 0644)
 
 	passphrase := []byte("test_password")
 	data := []byte("data")
