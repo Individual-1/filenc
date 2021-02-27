@@ -36,11 +36,11 @@ type Client struct {
 // NewClient wraps withReader and presents an stdin input
 func NewClient(configPath string) (*Client, error) {
 	pr := StdInPasswordReader{}
-	return NewClientWithReader(configPath, pr)
+	return newClientWithReader(configPath, pr)
 }
 
-// NewClientWithReader generates a new Client struct with keyset handle and config initialized
-func NewClientWithReader(configPath string, pr PasswordReader) (*Client, error) {
+// newClientWithReader generates a new Client struct with keyset handle and config initialized
+func newClientWithReader(configPath string, pr PasswordReader) (*Client, error) {
 	c := Client{}
 
 	info, err := appFs.Stat(configPath)

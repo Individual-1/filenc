@@ -67,7 +67,7 @@ func TestClientCrypto(t *testing.T) {
 	// Test initial keyset creation
 	mockPasswordReader.EXPECT().ReadPassword().Return(passphrase, nil).Times(1)
 
-	client, err := NewClientWithReader("/tmp/config", mockPasswordReader)
+	client, err := newClientWithReader("/tmp/config", mockPasswordReader)
 	if err != nil {
 		t.Errorf("Failed to create new client: %s", err.Error())
 	}
@@ -89,7 +89,7 @@ func TestClientCrypto(t *testing.T) {
 	// Test existing keyset load
 	mockPasswordReader.EXPECT().ReadPassword().Return(passphrase, nil).Times(1)
 
-	client2, err := NewClientWithReader("/tmp/config", mockPasswordReader)
+	client2, err := newClientWithReader("/tmp/config", mockPasswordReader)
 
 	e2, err := client2.Encrypt(data, nil)
 	if err != nil {

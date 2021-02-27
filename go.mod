@@ -3,7 +3,7 @@ module github.com/Individual-1/filenc
 go 1.16
 
 require (
-	github.com/golang/mock v1.5.0 // indirect
+	github.com/golang/mock v1.5.0
 	github.com/google/tink/go v1.5.0
 	github.com/spf13/afero v1.5.1
 	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83
