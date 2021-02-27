@@ -12,14 +12,35 @@ import (
 	"github.com/google/tink/go/tink"
 )
 
+// PasswordReader interface is an indirection so we can mock out ReadPassword
+type PasswordReader interface {
+	ReadPassword() ([]byte, error)
+}
+
+// StdInPasswordReader is a blank struct for stdin password reader
+type StdInPasswordReader struct {
+}
+
+// ReadPassword is a thin wrapper around term ReadPassword for Stdin
+func (p StdInPasswordReader) ReadPassword() ([]byte, error) {
+	return term.ReadPassword(syscall.Stdin)
+
+}
+
 // Client struct wraps a keyset handle and some config data
 type Client struct {
 	kh     *keyset.Handle
 	config *Config
 }
 
-// NewClient generates a new Client struct with keyset handle and config initialized
+// NewClient wraps withReader and presents an stdin input
 func NewClient(configPath string) (*Client, error) {
+	pr := StdInPasswordReader{}
+	return NewClientWithReader(configPath, pr)
+}
+
+// NewClientWithReader generates a new Client struct with keyset handle and config initialized
+func NewClientWithReader(configPath string, pr PasswordReader) (*Client, error) {
 	c := Client{}
 
 	info, err := appFs.Stat(configPath)
@@ -48,7 +69,7 @@ func NewClient(configPath string) (*Client, error) {
 		return nil, err
 	}
 
-	c.kh, err = getKeyset(c.config)
+	c.kh, err = getKeyset(c.config, pr)
 
 	return &c, nil
 }
@@ -73,10 +94,10 @@ func (c *Client) Decrypt(data []byte, assocData []byte) ([]byte, error) {
 	return a.Decrypt(data, assocData)
 }
 
-func retrieveMasterKey(reason string, keyConfig *Config) (tink.AEAD, error) {
+func retrieveMasterKey(reason string, keyConfig *Config, pr PasswordReader) (tink.AEAD, error) {
 	fmt.Println(reason)
 	fmt.Print("> ")
-	passphrase, err := term.ReadPassword(syscall.Stdin)
+	passphrase, err := pr.ReadPassword()
 	if err != nil {
 		return nil, err
 	}
@@ -84,19 +105,19 @@ func retrieveMasterKey(reason string, keyConfig *Config) (tink.AEAD, error) {
 	return getMasterKey(passphrase, keyConfig)
 }
 
-func getKeyset(keyConfig *Config) (*keyset.Handle, error) {
+func getKeyset(keyConfig *Config, pr PasswordReader) (*keyset.Handle, error) {
 	var kh *keyset.Handle
 	var mKey tink.AEAD
 
 	_, err := appFs.Stat(keyConfig.KeysetPath)
 	if err != nil {
-		// File does exist
-		mKey, err = retrieveMasterKey("Enter passphrase", keyConfig)
+		// File does not exist
+		mKey, err = retrieveMasterKey("Enter passphrase", keyConfig, pr)
 		if err != nil {
 			return nil, err
 		}
 
-		kh, err = loadKeyset(mKey, keyConfig)
+		kh, err = newKeyset(mKey, keyConfig)
 		if err != nil {
 			return nil, err
 		}
@@ -104,13 +125,13 @@ func getKeyset(keyConfig *Config) (*keyset.Handle, error) {
 		return kh, nil
 	}
 
-	// File does not exist
-	mKey, err = retrieveMasterKey("Create new passphrase", keyConfig)
+	// File does exist
+	mKey, err = retrieveMasterKey("Create new passphrase", keyConfig, pr)
 	if err != nil {
 		return nil, err
 	}
 
-	kh, err = newKeyset(mKey, keyConfig)
+	kh, err = loadKeyset(mKey, keyConfig)
 	if err != nil {
 		return nil, err
 	}
