@@ -29,7 +29,7 @@ func getMasterKey(passphrase []byte, keyConfig *Config) (tink.AEAD, error) {
 }
 
 func loadKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) {
-	info, err := AppFs.Stat(keyConfig.KeysetPath)
+	info, err := appFs.Stat(keyConfig.KeysetPath)
 	if err != nil {
 		return nil, err
 	}
@@ -38,7 +38,7 @@ func loadKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) 
 		return nil, fmt.Errorf("keyfile path is a directory")
 	}
 
-	fileReader, err := AppFs.Open(keyConfig.KeysetPath)
+	fileReader, err := appFs.Open(keyConfig.KeysetPath)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func loadKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) 
 }
 
 func newKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) {
-	_, err := AppFs.Stat(keyConfig.KeysetPath)
+	_, err := appFs.Stat(keyConfig.KeysetPath)
 	if err == nil {
 		return nil, fmt.Errorf("keypath %s already exists", keyConfig.KeysetPath)
 	}
@@ -62,7 +62,7 @@ func newKeyset(masterKey tink.AEAD, keyConfig *Config) (*keyset.Handle, error) {
 	}
 
 	fmt.Printf("Writing keyset to disk: %s\n", keyConfig.KeysetPath)
-	keyFile, err := AppFs.Create(keyConfig.KeysetPath)
+	keyFile, err := appFs.Create(keyConfig.KeysetPath)
 	if err != nil {
 		return nil, err
 	}

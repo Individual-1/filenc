@@ -43,7 +43,7 @@ func NewClient(configPath string) (*Client, error) {
 func NewClientWithReader(configPath string, pr PasswordReader) (*Client, error) {
 	c := Client{}
 
-	info, err := AppFs.Stat(configPath)
+	info, err := appFs.Stat(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func NewClientWithReader(configPath string, pr PasswordReader) (*Client, error) 
 		return nil, fmt.Errorf("config path points to directory")
 	}
 
-	f, err := AppFs.Open(configPath)
+	f, err := appFs.Open(configPath)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +109,7 @@ func getKeyset(keyConfig *Config, pr PasswordReader) (*keyset.Handle, error) {
 	var kh *keyset.Handle
 	var mKey tink.AEAD
 
-	_, err := AppFs.Stat(keyConfig.KeysetPath)
+	_, err := appFs.Stat(keyConfig.KeysetPath)
 	if err != nil {
 		// File does not exist
 		mKey, err = retrieveMasterKey("Enter passphrase", keyConfig, pr)
